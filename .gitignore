@@ -1,0 +1,16 @@
+# .gitignore
+# Git worktrees (required for superpowers subagent-driven-development isolation)
+.worktrees/
+
+# IDE
+.idea/
+*.iml
+
+/.bundle/
+/vendor/bundle
+/.env
+/.env.*
+/log/
+/tmp/
+*.gem
+*.rbc
