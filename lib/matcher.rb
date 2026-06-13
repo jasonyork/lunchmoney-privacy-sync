@@ -37,6 +37,7 @@ module Matcher
     m = p["merchant"] || {}
     {
       lm_id: lm["id"],
+      lm_payee: lm["payee"],
       privacy_token: p["token"],
       suggested_payee: m["descriptor"]
     }
