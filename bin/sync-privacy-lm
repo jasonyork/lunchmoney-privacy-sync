@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+# bin/sync-privacy-lm
+require "optparse"
+# TODO: wire up in later tasks
+puts "Sync script placeholder - implement in Task 7"
