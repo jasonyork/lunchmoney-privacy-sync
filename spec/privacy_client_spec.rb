@@ -8,7 +8,7 @@ RSpec.describe PrivacyClient do
   let(:client) { PrivacyClient.new(api_key: api_key, base_url: "https://sandbox.privacy.com/v1") }
 
   it "lists transactions with correct auth header and pagination params" do
-    stub = stub_request(:get, "https://sandbox.privacy.com/transactions")
+    stub = stub_request(:get, "https://sandbox.privacy.com/v1/transactions")
       .with(
         headers: { "Authorization" => "api-key priv_test" },
         query: hash_including("begin" => "2026-05-01", "end" => "2026-05-31", "page" => "1", "page_size" => "50", "result" => "APPROVED")

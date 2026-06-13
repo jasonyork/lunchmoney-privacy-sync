@@ -16,7 +16,7 @@ class LunchMoneyClient
   end
 
   def get_transactions(start_date: nil, end_date: nil, limit: 2000)
-    resp = @conn.get("/transactions", {
+    resp = @conn.get("transactions", {
       start_date: start_date,
       end_date: end_date,
       limit: limit,
@@ -31,7 +31,7 @@ class LunchMoneyClient
     body = {}
     body["payee"] = payee if payee
     body["custom_metadata"] = custom_metadata if custom_metadata
-    resp = @conn.put("/transactions/#{id}", body.to_json, auth_header.merge("Content-Type" => "application/json"))
+    resp = @conn.put("transactions/#{id}", body.to_json, auth_header.merge("Content-Type" => "application/json"))
     handle_errors(resp)
     JSON.parse(resp.body)
   end

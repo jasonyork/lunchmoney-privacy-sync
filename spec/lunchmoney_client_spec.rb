@@ -8,7 +8,7 @@ RSpec.describe LunchMoneyClient do
   let(:client) { LunchMoneyClient.new(token: token) }
 
   it "fetches transactions with include_metadata=true and date filters" do
-    stub_request(:get, "https://api.lunchmoney.dev/transactions")
+    stub_request(:get, "https://api.lunchmoney.dev/v2/transactions")
       .with(
         headers: { "Authorization" => "Bearer lm_test" },
         query: hash_including("start_date" => "2026-05-01", "end_date" => "2026-05-31", "limit" => "2000", "include_metadata" => "true")
@@ -39,7 +39,7 @@ RSpec.describe LunchMoneyClient do
   end
 
   it "updates a transaction payee (from privacy merchant.descriptor) and custom_metadata via PUT" do
-    stub = stub_request(:put, "https://api.lunchmoney.dev/transactions/2112150655")
+    stub = stub_request(:put, "https://api.lunchmoney.dev/v2/transactions/2112150655")
       .with(
         headers: { "Authorization" => "Bearer lm_test", "Content-Type" => "application/json" },
         body: hash_including("payee" => "RESTAURANT ABC", "custom_metadata" => { "privacy_transaction_token" => "764fa5a3-..." })

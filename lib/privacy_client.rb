@@ -17,7 +17,7 @@ class PrivacyClient
     all = []
     page = 1
     loop do
-      resp = @conn.get("/transactions", {
+      resp = @conn.get("transactions", {
         begin: binding.local_variable_get(:begin),
         end: binding.local_variable_get(:end),
         result: result,

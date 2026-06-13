@@ -14,15 +14,15 @@ RSpec.describe "end-to-end sync" do
     priv_client = PrivacyClient.new(api_key: "pk")
 
     # LM list (include_metadata true is inside client)
-    stub_request(:get, /lunchmoney.dev\/transactions/)
+    stub_request(:get, /lunchmoney.dev\/v2\/transactions/)
       .to_return(body: { transactions: [ { "id" => 42, "date" => "2026-06-01", "amount" => "42.0000", "payee" => "PRIV", "notes" => nil, "custom_metadata" => {} } ], has_more: false }.to_json)
 
     # Privacy list
-    stub_request(:get, /privacy.com\/transactions/)
+    stub_request(:get, /privacy.com\/v1\/transactions/)
       .to_return(body: { data: [ { "token" => "tok-xyz", "amount" => 4200, "created" => "2026-06-01T12:00:00Z", "merchant" => { "descriptor" => "CAFE X", "city" => "SF", "state" => "CA", "mcc" => "5812" }, "card" => { "last_four" => "0001", "memo" => "test" } } ], page: 1, total_pages: 1 }.to_json)
 
     # The PUT we care about
-    update_stub = stub_request(:put, "https://api.lunchmoney.dev/transactions/42")
+    update_stub = stub_request(:put, "https://api.lunchmoney.dev/v2/transactions/42")
       .with(body: hash_including("payee" => "CAFE X", "custom_metadata" => hash_including("privacy_transaction_token" => "tok-xyz")))
       .to_return(body: { id: 42 }.to_json)
 
