@@ -2,7 +2,7 @@
 require "date"
 
 module Matcher
-  DATE_WINDOW_DAYS = 4
+  DATE_WINDOW_DAYS = 5
   CREDIT_EVENT_TYPES = %w[RETURN CREDIT_AUTHORIZATION].freeze
 
   def self.match(lm_transactions:, privacy_transactions:)
