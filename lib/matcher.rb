@@ -17,6 +17,14 @@ module Matcher
     end
   end
 
+  def self.unmatched(lm_transactions:, matched_ids:)
+    lm_transactions.select do |lm|
+      privacy_payee?(lm) &&
+        !already_enriched?(lm) &&
+        !matched_ids.include?(lm["id"])
+    end
+  end
+
   def self.already_enriched?(lm)
     meta = lm["custom_metadata"] || {}
     meta["privacy_transaction_token"] && !meta["privacy_transaction_token"].to_s.empty?

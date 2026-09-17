@@ -52,4 +52,29 @@ RSpec.describe Matcher do
     matches = Matcher.match(lm_transactions: [lm_enriched2], privacy_transactions: [priv_tx])
     expect(matches).to be_empty
   end
+
+  describe ".unmatched" do
+    it "returns privacy-named, non-enriched, non-matched LM tx" do
+      unmatched_tx = { "id" => 555, "date" => "2026-05-14", "amount" => "10.00", "payee" => "PRIVACY*9999", "custom_metadata" => {} }
+      result = Matcher.unmatched(lm_transactions: [unmatched_tx], matched_ids: [])
+      expect(result.map { |t| t["id"] }).to eq([555])
+    end
+
+    it "excludes a non-privacy payee" do
+      result = Matcher.unmatched(lm_transactions: [lm_tx.merge("payee" => "AMAZON PRIME")], matched_ids: [])
+      expect(result).to be_empty
+    end
+
+    it "excludes an already-enriched tx" do
+      enriched = lm_tx.merge("custom_metadata" => { "privacy_transaction_token" => "already" })
+      result = Matcher.unmatched(lm_transactions: [enriched], matched_ids: [])
+      expect(result).to be_empty
+    end
+
+    it "excludes a tx whose id appears in matched_ids" do
+      matched_ids = [lm_tx["id"]]
+      result = Matcher.unmatched(lm_transactions: [lm_tx], matched_ids: matched_ids)
+      expect(result).to be_empty
+    end
+  end
 end
