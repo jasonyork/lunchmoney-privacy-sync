@@ -34,5 +34,15 @@ class Syncer
       @lm.update_transaction(m[:lm_id], payee: m[:suggested_payee], custom_metadata: meta)
       puts "    UPDATED"
     end
+
+    matched_ids = matches.map { |m| m[:lm_id] }
+    unmatched = Matcher.unmatched(lm_transactions: lm_txs, matched_ids: matched_ids)
+
+    if unmatched.any?
+      puts "Unmatched privacy-named transactions (#{unmatched.size}):"
+      unmatched.each do |lm|
+        puts "  LM##{lm['id']} #{lm['date']} $#{lm['amount']} #{lm['payee']}"
+      end
+    end
   end
 end

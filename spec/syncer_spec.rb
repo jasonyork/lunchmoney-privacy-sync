@@ -41,4 +41,32 @@ RSpec.describe Syncer do
 
     syncer.run
   end
+
+  it "prints privacy-named LM tx that matched no privacy tx" do
+    lm_client = double("LM")
+    priv_client = double("Priv")
+
+    lm_unmatched = { "id" => 777, "date" => Date.today.iso8601, "amount" => "12.3400", "payee" => "PRIVACY*9999", "notes" => nil, "custom_metadata" => {} }
+    priv_tx = { "token" => "tok", "amount" => -123456, "created" => "#{Date.today.iso8601}T19:17:22Z", "merchant" => { "descriptor" => "SOMETHING ELSE" } }
+
+    allow(lm_client).to receive(:get_transactions).and_return([lm_unmatched])
+    allow(priv_client).to receive(:list_transactions).and_return([priv_tx])
+
+    syncer = Syncer.new(config: cfg, lm_client: lm_client, privacy_client: priv_client)
+
+    expect { syncer.run }.to output(/Unmatched privacy-named transactions \(1\):\n\s+LM#777 2026-.*\$12\.3400 PRIVACY\*9999/m).to_stdout
+  end
+
+  it "does not print unmatched header when all privacy-named txs matched" do
+    lm_tx = { "id" => 123, "date" => Date.today.iso8601, "amount" => "76.6600", "payee" => "PRIVACY*1234", "notes" => nil, "custom_metadata" => {} }
+    priv_tx = { "token" => "tok", "amount" => -7666, "created" => "#{Date.today.iso8601}T19:17:22Z", "merchant" => { "descriptor" => "RESTAURANT ABC" } }
+
+    allow(lm_client).to receive(:get_transactions).and_return([lm_tx])
+    allow(priv_client).to receive(:list_transactions).and_return([priv_tx])
+
+    syncer = Syncer.new(config: cfg, lm_client: lm_client, privacy_client: priv_client)
+
+    expect { syncer.run }.not_to output(/Unmatched privacy-named transactions/).to_stdout
+    expect { syncer.run }.to output(/Found 1 matches/).to_stdout
+  end
 end
