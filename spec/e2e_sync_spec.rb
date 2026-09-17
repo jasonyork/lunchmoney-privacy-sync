@@ -7,7 +7,7 @@ require "webmock/rspec"
 WebMock.disable_net_connect!
 
 RSpec.describe "end-to-end sync" do
-  it "fetches, matches one tx, and calls update with correct payload when not dry-run" do
+  it "fetches, matches one tx, updates it, and reports an unmatched privacy-named tx when not dry-run" do
     cfg = Config.new(lunchmoney_token: "lm", privacy_api_key: "pk", dry_run: false, days: 30)
 
     lm_client = LunchMoneyClient.new(token: "lm")
