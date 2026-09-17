@@ -41,6 +41,12 @@ RSpec.describe Matcher do
     expect(matches).to be_empty
   end
 
+  it "skips LM tx whose payee does not contain 'Privacy'" do
+    lm_nonpriv = lm_tx.merge("payee" => "AMAZON PRIME")
+    matches = Matcher.match(lm_transactions: [lm_nonpriv], privacy_transactions: [priv_tx])
+    expect(matches).to be_empty
+  end
+
   it "skips already-enriched LM tx (extra explicit case from Step 4)" do
     lm_enriched2 = { "id" => 999, "date" => "2026-05-15", "amount" => "10.00", "custom_metadata" => { "privacy_transaction_token" => "foo-bar" } }
     matches = Matcher.match(lm_transactions: [lm_enriched2], privacy_transactions: [priv_tx])

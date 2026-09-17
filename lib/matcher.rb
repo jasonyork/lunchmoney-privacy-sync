@@ -2,12 +2,13 @@
 require "date"
 
 module Matcher
-  DATE_WINDOW_DAYS = 2
+  DATE_WINDOW_DAYS = 4
 
   def self.match(lm_transactions:, privacy_transactions:)
     privacy_transactions.each_with_object([]) do |p, acc|
       lm_transactions.each do |lm|
         next if already_enriched?(lm)
+        next unless privacy_payee?(lm)
         if match?(lm, p)
           acc << build_match(lm, p)
           break # one-to-one for simplicity; first LM wins
@@ -19,6 +20,10 @@ module Matcher
   def self.already_enriched?(lm)
     meta = lm["custom_metadata"] || {}
     meta["privacy_transaction_token"] && !meta["privacy_transaction_token"].to_s.empty?
+  end
+
+  def self.privacy_payee?(lm)
+    (lm["payee"] || "").downcase.include?("privacy")
   end
 
   def self.match?(lm, p)
@@ -38,7 +43,11 @@ module Matcher
     {
       lm_id: lm["id"],
       lm_payee: lm["payee"],
+      lm_date: lm["date"],
+      lm_amount: lm["amount"],
       privacy_token: p["token"],
+      privacy_date: p["created"],
+      privacy_amount: p["amount"],
       suggested_payee: m["descriptor"]
     }
   end

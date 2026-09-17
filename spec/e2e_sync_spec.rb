@@ -15,7 +15,7 @@ RSpec.describe "end-to-end sync" do
 
     # LM list (include_metadata true is inside client)
     stub_request(:get, /lunchmoney.dev\/v2\/transactions/)
-      .to_return(body: { transactions: [ { "id" => 42, "date" => "2026-06-01", "amount" => "42.0000", "payee" => "PRIV", "notes" => nil, "custom_metadata" => {} } ], has_more: false }.to_json)
+      .to_return(body: { transactions: [ { "id" => 42, "date" => "2026-06-01", "amount" => "42.0000",         "payee" => "PRIVACY*1234", "notes" => nil, "custom_metadata" => {} } ], has_more: false }.to_json)
 
     # Privacy list
     stub_request(:get, /privacy.com\/v1\/transactions/)
