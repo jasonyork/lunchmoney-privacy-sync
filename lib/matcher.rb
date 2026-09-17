@@ -3,9 +3,11 @@ require "date"
 
 module Matcher
   DATE_WINDOW_DAYS = 4
+  CREDIT_EVENT_TYPES = %w[RETURN CREDIT_AUTHORIZATION].freeze
 
   def self.match(lm_transactions:, privacy_transactions:)
     privacy_transactions.each_with_object([]) do |p, acc|
+      next if privacy_credit?(p)
       lm_transactions.each do |lm|
         next if already_enriched?(lm)
         next unless privacy_payee?(lm)
@@ -32,6 +34,10 @@ module Matcher
 
   def self.privacy_payee?(lm)
     (lm["payee"] || "").downcase.include?("privacy")
+  end
+
+  def self.privacy_credit?(p)
+    (p["events"] || []).any? { |e| CREDIT_EVENT_TYPES.include?(e["type"]) }
   end
 
   def self.match?(lm, p)

@@ -53,6 +53,24 @@ RSpec.describe Matcher do
     expect(matches).to be_empty
   end
 
+  it "does not match a refund privacy tx (RETURN event)" do
+    priv_refund = priv_tx.merge("events" => [{ "type" => "RETURN", "amount" => 7666 }])
+    matches = Matcher.match(lm_transactions: [lm_tx], privacy_transactions: [priv_refund])
+    expect(matches).to be_empty
+  end
+
+  it "does not match a credit privacy tx (CREDIT_AUTHORIZATION event)" do
+    priv_credit = priv_tx.merge("events" => [{ "type" => "CREDIT_AUTHORIZATION", "amount" => 7666 }])
+    matches = Matcher.match(lm_transactions: [lm_tx], privacy_transactions: [priv_credit])
+    expect(matches).to be_empty
+  end
+
+  it "matches a negative-amount privacy tx with only purchase events (amount sign is not the discriminator)" do
+    priv_purchase = priv_tx.merge("events" => [{ "type" => "AUTHORIZATION", "amount" => 7666 }, { "type" => "CLEARING", "amount" => 7666 }])
+    matches = Matcher.match(lm_transactions: [lm_tx], privacy_transactions: [priv_purchase])
+    expect(matches.size).to eq(1)
+  end
+
   describe ".unmatched" do
     it "returns privacy-named, non-enriched, non-matched LM tx" do
       unmatched_tx = { "id" => 555, "date" => "2026-05-14", "amount" => "10.00", "payee" => "PRIVACY*9999", "custom_metadata" => {} }
