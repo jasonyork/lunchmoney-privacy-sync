@@ -54,7 +54,7 @@ RSpec.describe Syncer do
 
     syncer = Syncer.new(config: cfg, lm_client: lm_client, privacy_client: priv_client)
 
-    expect { syncer.run }.to output(/Unmatched privacy-named transactions \(1\):\n\s+LM#777 2026-.*\$12\.3400 PRIVACY\*9999/m).to_stdout
+    expect { syncer.run }.to output(/Unmatched privacy-named transactions \(1\):\n\s+LM#777 #{Date.today.year}-.*\$12\.3400 PRIVACY\*9999/m).to_stdout
   end
 
   it "does not print unmatched header when all privacy-named txs matched" do

@@ -15,7 +15,13 @@ RSpec.describe "end-to-end sync" do
 
     # LM list (include_metadata true is inside client)
     stub_request(:get, /lunchmoney.dev\/v2\/transactions/)
-      .to_return(body: { transactions: [ { "id" => 42, "date" => "2026-06-01", "amount" => "42.0000",         "payee" => "PRIVACY*1234", "notes" => nil, "custom_metadata" => {} } ], has_more: false }.to_json)
+      .to_return(body: {
+        transactions: [
+          { "id" => 42, "date" => "2026-06-01", "amount" => "42.0000", "payee" => "PRIVACY*1234", "notes" => nil, "custom_metadata" => {} },
+          { "id" => 43, "date" => "2026-06-02", "amount" => "9.9900", "payee" => "PRIVACY*9999", "notes" => nil, "custom_metadata" => {} }
+        ],
+        has_more: false
+      }.to_json)
 
     # Privacy list
     stub_request(:get, /privacy.com\/v1\/transactions/)
@@ -26,7 +32,8 @@ RSpec.describe "end-to-end sync" do
       .with(body: hash_including("payee" => "CAFE X", "custom_metadata" => hash_including("privacy_transaction_token" => "tok-xyz")))
       .to_return(body: { id: 42 }.to_json)
 
-    Syncer.new(config: cfg, lm_client: lm_client, privacy_client: priv_client).run
+    expect { Syncer.new(config: cfg, lm_client: lm_client, privacy_client: priv_client).run }
+      .to output(/Unmatched privacy-named transactions \(1\):.*LM#43 2026-06-02 \$9\.9900 PRIVACY\*9999/m).to_stdout
 
     expect(update_stub).to have_been_requested.once
   end
