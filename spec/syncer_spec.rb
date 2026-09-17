@@ -42,7 +42,8 @@ RSpec.describe Syncer do
     syncer.run
   end
 
-  it "prints privacy-named LM tx that matched no privacy tx" do
+  it "prints privacy-named LM tx that matched no privacy tx and does not update it even when not dry_run" do
+    cfg = Config.new(lunchmoney_token: "lm", privacy_api_key: "p", dry_run: false, days: 7, force: false)
     lm_client = double("LM")
     priv_client = double("Priv")
 
@@ -54,6 +55,7 @@ RSpec.describe Syncer do
 
     syncer = Syncer.new(config: cfg, lm_client: lm_client, privacy_client: priv_client)
 
+    expect(lm_client).not_to receive(:update_transaction)
     expect { syncer.run }.to output(/Unmatched privacy-named transactions \(1\):\n\s+LM#777 #{Date.today.year}-.*\$12\.3400 PRIVACY\*9999/m).to_stdout
   end
 
