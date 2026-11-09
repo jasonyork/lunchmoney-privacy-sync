@@ -72,6 +72,76 @@ Command-line flags override environment variables.
 - When several same-amount Privacy purchases fall within the 5-day window, they
   are paired in order. Check the dry-run output if you have repeat charges.
 
+## Running on a schedule
+
+Re-running is safe, since already-synced transactions are skipped, so a daily
+run with the default 14-day window catches everything, including transactions
+that post a few days late.
+
+Two things apply wherever you run it:
+
+- **Set `DRY_RUN=false`.** Otherwise every scheduled run only previews.
+- **Keep the logs private.** Each run prints transaction dates, amounts and
+  merchant names. For example, don't run it from a public repo's GitHub Actions.
+
+### Docker
+
+The included `Dockerfile` builds an image that runs the sync once and exits.
+Credentials are never copied into the image (`.env` is excluded in
+`.dockerignore`), so pass them at run time:
+
+```bash
+docker build -t lunchmoney-privacy-sync .
+docker run --rm --env-file .env lunchmoney-privacy-sync                       # dry run
+docker run --rm --env-file .env -e DRY_RUN=false lunchmoney-privacy-sync      # real run
+```
+
+### Fly.io (scheduled Machine)
+
+Fly can start a Machine on a fuzzy `hourly`, `daily`, `weekly` or `monthly`
+schedule. It runs the container, which exits when the sync finishes, and you're
+billed only for the seconds it runs.
+
+```bash
+# One-time setup
+fly apps create lunchmoney-privacy-sync          # pick any unique name
+fly secrets set -a lunchmoney-privacy-sync \
+  LUNCHMONEY_TOKEN=your_token PRIVACY_API_KEY=your_key
+
+# Build from the local Dockerfile and schedule it (also runs once now)
+fly machine run . -a lunchmoney-privacy-sync \
+  --schedule daily --restart no \
+  --env DRY_RUN=false \
+  --vm-size shared-cpu-1x --vm-memory 256
+```
+
+App secrets are exposed to the Machine as environment variables. Useful
+follow-ups:
+
+```bash
+fly logs -a lunchmoney-privacy-sync              # watch the next run's output
+fly machine list -a lunchmoney-privacy-sync      # find the Machine ID
+fly machine destroy <machine-id> -a lunchmoney-privacy-sync   # stop the schedule
+```
+
+To deploy code changes, destroy the old Machine and run the `fly machine run`
+command again. Scheduled Machines can't be started by hand, so to test a
+change, run it once with `fly machine run . -a lunchmoney-privacy-sync --rm`
+(dry run, unless you add `--env DRY_RUN=false`).
+
+Fly picks the exact run time, and a failed run won't alert you, so check
+`fly logs` now and then. For alerts, you could wrap the command so it pings a
+dead-man's-switch service like [healthchecks.io](https://healthchecks.io) after
+each successful run.
+
+### Alternatives
+
+- **macOS launchd:** a LaunchAgent that runs `bin/sync-privacy-lm` daily with
+  your local `.env`. Simple, but it only runs while your Mac is awake.
+- **GitHub Actions cron:** works well from a *private* repo with the tokens
+  stored as repository secrets. Avoid it on a public repo, because the run logs
+  are public.
+
 ## ⚠️ Caution
 
 This tool edits real financial records. Always review a dry run before using

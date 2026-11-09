@@ -1,0 +1,13 @@
+# Never bake credentials into the image; pass them as env vars / Fly secrets.
+.env
+.env.*
+!.env.example
+
+.git
+.idea
+.worktrees
+docs
+spec
+log
+tmp
+opencode.json
