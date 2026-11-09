@@ -10,7 +10,12 @@
 /vendor/bundle
 /.env
 /.env.*
+!/.env.example
 /log/
 /tmp/
 *.gem
 *.rbc
+
+# Personal AI-tooling config and working docs
+/opencode.json
+/docs/superpowers/
