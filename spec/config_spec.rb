@@ -16,4 +16,12 @@ RSpec.describe Config do
     stub_const("ENV", {})
     expect { Config.load }.to raise_error(/LUNCHMONEY_TOKEN/)
   end
+
+  it "defaults to dry run and honors DRY_RUN=false" do
+    base = { "LUNCHMONEY_TOKEN" => "lm", "PRIVACY_API_KEY" => "pk" }
+    stub_const("ENV", base)
+    expect(Config.load.dry_run).to be(true)
+    stub_const("ENV", base.merge("DRY_RUN" => "false"))
+    expect(Config.load.dry_run).to be(false)
+  end
 end

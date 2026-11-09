@@ -24,13 +24,16 @@ class Syncer
 
     matches = Matcher.match(lm_transactions: lm_txs, privacy_transactions: priv_txs)
 
-    puts "Found #{matches.size} matches (dry_run=#{@config.dry_run}, force=#{@config.force})"
+    puts "Found #{matches.size} matches (dry_run=#{@config.dry_run})"
 
     matches.each do |m|
       puts "  LM##{m[:lm_id]} #{m[:lm_date]} $#{m[:lm_amount]} #{m[:lm_payee]} -> #{m[:suggested_payee]} | Privacy #{m[:privacy_date].to_s[0,10]} $#{format('%.2f', m[:privacy_amount].to_f / 100.0)} (#{m[:privacy_token]})"
       next if @config.dry_run
 
-      meta = { "privacy_transaction_token" => m[:privacy_token], "privacy_matched_at" => Time.now.utc.iso8601 }
+      meta = m[:lm_custom_metadata].merge(
+        "privacy_transaction_token" => m[:privacy_token],
+        "privacy_matched_at" => Time.now.utc.iso8601
+      )
       @lm.update_transaction(m[:lm_id], payee: m[:suggested_payee], custom_metadata: meta)
       puts "    UPDATED"
     end

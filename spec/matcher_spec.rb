@@ -71,6 +71,15 @@ RSpec.describe Matcher do
     expect(matches.size).to eq(1)
   end
 
+  it "never matches the same LM tx to more than one privacy tx" do
+    lm_a = lm_tx.merge("id" => 1, "date" => "2026-05-15")
+    lm_b = lm_tx.merge("id" => 2, "date" => "2026-05-16")
+    priv_a = priv_tx.merge("token" => "a", "created" => "2026-05-15T10:00:00Z")
+    priv_b = priv_tx.merge("token" => "b", "created" => "2026-05-16T10:00:00Z")
+    matches = Matcher.match(lm_transactions: [lm_a, lm_b], privacy_transactions: [priv_a, priv_b])
+    expect(matches.map { |m| [m[:lm_id], m[:privacy_token]] }).to contain_exactly([1, "a"], [2, "b"])
+  end
+
   describe ".unmatched" do
     it "returns privacy-named, non-enriched, non-matched LM tx" do
       unmatched_tx = { "id" => 555, "date" => "2026-05-14", "amount" => "10.00", "payee" => "PRIVACY*9999", "custom_metadata" => {} }

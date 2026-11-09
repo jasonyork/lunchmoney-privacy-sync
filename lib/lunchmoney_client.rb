@@ -1,4 +1,3 @@
-# lib/lunchmoney_client.rb
 # frozen_string_literal: true
 require "faraday"
 require "faraday/retry"

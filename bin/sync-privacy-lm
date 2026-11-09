@@ -1,34 +1,30 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
-# bin/sync-privacy-lm
 
-$LOAD_PATH.unshift(File.expand_path('../lib', __dir__))
+$LOAD_PATH.unshift(File.expand_path("../lib", __dir__))
 
 require "optparse"
-require_relative "../lib/config"
-require_relative "../lib/lunchmoney_client"
-require_relative "../lib/privacy_client"
-require_relative "../lib/syncer"
+require "config"
+require "lunchmoney_client"
+require "privacy_client"
+require "syncer"
 
-options = { dry_run: true, days: nil, force: false }
+options = {}
 
-parser = OptionParser.new do |opts|
+OptionParser.new do |opts|
   opts.banner = "Usage: bin/sync-privacy-lm [options]"
-  opts.on("--no-dry-run", "Actually perform updates (default is dry-run)") { options[:dry_run] = false }
-  opts.on("--days N", Integer, "Look back N days (default from env or 14)") { |n| options[:days] = n }
-  opts.on("--force", "Re-apply even if privacy_transaction_token already present") { options[:force] = true }
+  opts.on("--[no-]dry-run", "Preview matches without updating (default: true, or DRY_RUN from env)") { |v| options[:dry_run] = v }
+  opts.on("--days N", Integer, "Look back N days (default: SYNC_DAYS from env, or 14)") { |n| options[:days] = n }
   opts.on("-h", "--help", "Show this help") { puts opts; exit }
-end
-parser.parse!
+end.parse!
 
 cfg = Config.load
 cfg = Config.new(
   lunchmoney_token: cfg.lunchmoney_token,
   privacy_api_key: cfg.privacy_api_key,
   privacy_base_url: cfg.privacy_base_url,
-  days: options[:days] || cfg.days,
-  dry_run: options[:dry_run],
-  force: options[:force] || cfg.force
+  days: options.fetch(:days, cfg.days),
+  dry_run: options.fetch(:dry_run, cfg.dry_run)
 )
 
 lm = LunchMoneyClient.new(token: cfg.lunchmoney_token)

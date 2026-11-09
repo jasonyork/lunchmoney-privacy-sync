@@ -3,7 +3,7 @@ require "syncer"
 require "config"
 
 RSpec.describe Syncer do
-  let(:cfg) { Config.new(lunchmoney_token: "lm", privacy_api_key: "p", dry_run: true, days: 7, force: false) }
+  let(:cfg) { Config.new(lunchmoney_token: "lm", privacy_api_key: "p", dry_run: true, days: 7) }
   let(:lm_client) { double("LM") }
   let(:priv_client) { double("Priv") }
   let(:syncer) { Syncer.new(config: cfg, lm_client: lm_client, privacy_client: priv_client) }
@@ -16,7 +16,7 @@ RSpec.describe Syncer do
   end
 
   it "fetches, matches, and calls update when not dry_run" do
-    cfg = Config.new(lunchmoney_token: "lm", privacy_api_key: "p", dry_run: false, days: 7, force: false)
+    cfg = Config.new(lunchmoney_token: "lm", privacy_api_key: "p", dry_run: false, days: 7)
     lm_client = double("LM")
     priv_client = double("Priv")
     syncer = Syncer.new(config: cfg, lm_client: lm_client, privacy_client: priv_client)
@@ -43,7 +43,7 @@ RSpec.describe Syncer do
   end
 
   it "prints privacy-named LM tx that matched no privacy tx and does not update it even when not dry_run" do
-    cfg = Config.new(lunchmoney_token: "lm", privacy_api_key: "p", dry_run: false, days: 7, force: false)
+    cfg = Config.new(lunchmoney_token: "lm", privacy_api_key: "p", dry_run: false, days: 7)
     lm_client = double("LM")
     priv_client = double("Priv")
 
@@ -70,5 +70,22 @@ RSpec.describe Syncer do
 
     expect { syncer.run }.not_to output(/Unmatched privacy-named transactions/).to_stdout
     expect { syncer.run }.to output(/Found 1 matches/).to_stdout
+  end
+
+  it "preserves existing custom_metadata keys when updating" do
+    cfg = Config.new(lunchmoney_token: "lm", privacy_api_key: "p", dry_run: false, days: 7)
+    lm_tx = { "id" => 123, "date" => Date.today.iso8601, "amount" => "76.6600", "payee" => "PRIVACY*1234", "custom_metadata" => { "other" => "keep" } }
+    priv_tx = { "token" => "tok", "amount" => -7666, "created" => "#{Date.today.iso8601}T19:17:22Z", "merchant" => { "descriptor" => "RESTAURANT ABC" } }
+
+    allow(lm_client).to receive(:get_transactions).and_return([lm_tx])
+    allow(priv_client).to receive(:list_transactions).and_return([priv_tx])
+
+    expect(lm_client).to receive(:update_transaction).with(
+      123,
+      payee: "RESTAURANT ABC",
+      custom_metadata: hash_including("other" => "keep", "privacy_transaction_token" => "tok")
+    ).and_return({ "id" => 123 })
+
+    Syncer.new(config: cfg, lm_client: lm_client, privacy_client: priv_client).run
   end
 end

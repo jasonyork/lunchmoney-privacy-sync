@@ -13,13 +13,15 @@ class PrivacyClient
   end
 
   # Returns flat array of transaction hashes (all pages)
-  def list_transactions(begin: nil, end: nil, result: "APPROVED", page_size: 50)
+  # Accepts `begin:` / `end:` (YYYY-MM-DD). Those are Ruby keywords, so they
+  # arrive via **range instead of named parameters.
+  def list_transactions(result: "APPROVED", page_size: 50, **range)
     all = []
     page = 1
     loop do
       resp = @conn.get("transactions", {
-        begin: binding.local_variable_get(:begin),
-        end: binding.local_variable_get(:end),
+        begin: range[:begin],
+        end: range[:end],
         result: result,
         page: page,
         page_size: page_size

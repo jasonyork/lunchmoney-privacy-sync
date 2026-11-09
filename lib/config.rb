@@ -1,16 +1,20 @@
 # frozen_string_literal: true
-require "dotenv/load" if ENV["RACK_ENV"] != "production" # harmless in script
+
+begin
+  require "dotenv/load"
+rescue LoadError
+  # dotenv is optional; plain environment variables work without it.
+end
 
 class Config
-  attr_reader :lunchmoney_token, :privacy_api_key, :privacy_base_url, :days, :dry_run, :force
+  attr_reader :lunchmoney_token, :privacy_api_key, :privacy_base_url, :days, :dry_run
 
-  def initialize(lunchmoney_token:, privacy_api_key:, privacy_base_url: nil, days: 14, dry_run: true, force: false)
+  def initialize(lunchmoney_token:, privacy_api_key:, privacy_base_url: nil, days: 14, dry_run: true)
     @lunchmoney_token = lunchmoney_token
     @privacy_api_key = privacy_api_key
     @privacy_base_url = privacy_base_url || "https://api.privacy.com/v1"
     @days = days
     @dry_run = dry_run
-    @force = force
   end
 
   def self.load
@@ -24,8 +28,7 @@ class Config
       privacy_api_key: priv,
       privacy_base_url: ENV["PRIVACY_BASE_URL"],
       days: (ENV["SYNC_DAYS"] || 14).to_i,
-      dry_run: ENV.fetch("DRY_RUN", "true") != "false",
-      force: ENV.fetch("FORCE", "false") == "true"
+      dry_run: ENV.fetch("DRY_RUN", "true") != "false"
     )
   end
 end

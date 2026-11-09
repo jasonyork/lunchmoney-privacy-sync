@@ -1,21 +1,26 @@
 # frozen_string_literal: true
 require "date"
+require "set"
 
 module Matcher
   DATE_WINDOW_DAYS = 5
   CREDIT_EVENT_TYPES = %w[RETURN CREDIT_AUTHORIZATION].freeze
 
   def self.match(lm_transactions:, privacy_transactions:)
+    used_lm_ids = Set.new
     privacy_transactions.each_with_object([]) do |p, acc|
       next if privacy_credit?(p)
-      lm_transactions.each do |lm|
-        next if already_enriched?(lm)
-        next unless privacy_payee?(lm)
-        if match?(lm, p)
-          acc << build_match(lm, p)
-          break # one-to-one for simplicity; first LM wins
-        end
+
+      lm = lm_transactions.find do |candidate|
+        !used_lm_ids.include?(candidate["id"]) &&
+          !already_enriched?(candidate) &&
+          privacy_payee?(candidate) &&
+          match?(candidate, p)
       end
+      next unless lm
+
+      used_lm_ids << lm["id"]
+      acc << build_match(lm, p)
     end
   end
 
@@ -59,6 +64,7 @@ module Matcher
       lm_payee: lm["payee"],
       lm_date: lm["date"],
       lm_amount: lm["amount"],
+      lm_custom_metadata: lm["custom_metadata"] || {},
       privacy_token: p["token"],
       privacy_date: p["created"],
       privacy_amount: p["amount"],
